@@ -1,13 +1,18 @@
-ONCE YOU HAVE INSTALLED "SelfishNetV3_Installer.msi" FOLLOW THIS INSTRUCTIONS:
+ONCE YOU HAVE INSTALLED "SelfishNetV3_Installer.msi" FOLLOW THESE INSTRUCTIONS:
 
-(YOU OBVIOUSLY WILL NOT FIND THE PATH ON INSTRUCTION NUMBER 1 IF YOU HAVEN'T ISTALLED IT YET, SO GO AND DO THAT FIRST)
+(YOU OBVIOUSLY WILL NOT FIND THE PATH ON INSTRUCTION NUMBER 1 IF YOU HAVEN'T INSTALLED IT YET, SO GO AND DO THAT FIRST)
 
 
 1.- Go to "C:\Program Files (x86)\nov0caina\SelfishNetV3".
 
-2.- Once you're in the SelfishNetV3 folder, install WinPcap_4_1_3.exe this will install needed software to use your 
-wifi chipset.
+2.- Install Npcap 1.87 or newer from the official Npcap website:
+    https://npcap.com/dist/npcap-1.87.exe
+
+    During installation, enable "WinPcap API-compatible Mode". SelfishNet uses Npcap's compatibility API file
+    named wpcap.dll, but legacy WinPcap itself is no longer supported.
 
 3.- Install the Computerfont.ttf, this font is used by SelfishNetV3 and will look horrible without it.
 
-4.- Thats it, make a fair use of this tool and enjoy!.
+4.- Run SelfishNet as administrator.
+
+5.- Thats it, make a fair use of this tool and enjoy!.

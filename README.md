@@ -4,7 +4,7 @@
 [Currently in development]
 
 Requirements:
-- You need to have WinPcap previously installed (See instructions included in the release zip).
+- You need to have Npcap 1.87 or newer installed from https://npcap.com/ with WinPcap API-compatible Mode enabled (see instructions included in the release zip).
 - Your Wi-Fi chipset must be compatible with monitor mode.
 
 Current Functions:

@@ -39,7 +39,7 @@ namespace SelfishNetv3
         {
             if (!this.driver.create())
             {
-                int num = (int)MessageBox.Show("problem installing the drivers, do you have administrator privileges?");
+                int num = (int)MessageBox.Show("Npcap/WinPcap driver was not detected. Install Npcap with WinPcap API-compatible mode, then run SelfishNet as administrator.");
                 if (this == null)
                     return;
                 this.Dispose();
@@ -350,7 +350,7 @@ namespace SelfishNetv3
             }
             else
             {
-                int num = (int)MessageBox.Show("Driver WinPcap already installed");
+                this.licenseAccepted();
             }
         }
 

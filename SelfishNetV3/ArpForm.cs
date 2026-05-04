@@ -2,6 +2,7 @@
 using PcapNet;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -34,6 +35,7 @@ namespace SelfishNetv3
             ArpForm.instance = this;
             this.timerStatCount = 0;
             this.driver = new Driver();
+            EnsureTrayIcon();
         }
         public void licenseAccepted()
         {
@@ -316,6 +318,7 @@ namespace SelfishNetv3
 
         private unsafe void ArpForm_Load(object sender, EventArgs e)
         {
+            EnsureTrayIcon();
 
             if (args.Length > 1)
             {
@@ -491,15 +494,38 @@ namespace SelfishNetv3
 
         private void SelfishNetTrayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            RestoreFromTray();
+        }
+
+        private void EnsureTrayIcon()
+        {
+            SelfishNetTrayIcon.Icon = Icon ?? SystemIcons.Application;
+            SelfishNetTrayIcon.ContextMenuStrip = SelfishNetTray;
+            SelfishNetTrayIcon.Text = "SelfishNet v3";
+            SelfishNetTrayIcon.Visible = true;
+        }
+
+        private void MinimizeToTray()
+        {
+            EnsureTrayIcon();
+            ShowInTaskbar = false;
+            Hide();
+        }
+
+        private void RestoreFromTray()
+        {
+            EnsureTrayIcon();
+            ShowInTaskbar = true;
             Show();
-            this.WindowState = FormWindowState.Normal;
+            WindowState = FormWindowState.Normal;
+            Activate();
         }
 
         private void ArpForm_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Minimized)
             {
-                Hide();
+                MinimizeToTray();
             }
             else
             {
@@ -527,8 +553,7 @@ namespace SelfishNetv3
 
         private void ShowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Show();
-            this.WindowState = FormWindowState.Normal;
+            RestoreFromTray();
 
         }
 
@@ -549,7 +574,7 @@ namespace SelfishNetv3
                     case System.Windows.Forms.DialogResult.OK:
                         if (WindowState == FormWindowState.Minimized)
                         {
-                            Show();
+                            RestoreFromTray();
                         }
                         ToolStripButton3_Click(toolStripButton3, new EventArgs());
                         SelfishNetTrayIcon.Dispose();

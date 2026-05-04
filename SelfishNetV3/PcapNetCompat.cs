@@ -197,18 +197,86 @@ namespace PcapNet
 
         public IntPtr openDeviceDriver(sbyte* driverName)
         {
-            var name = Marshal.PtrToStringAnsi((IntPtr)driverName) ?? "npf";
-            return IsServiceInstalled(name) || TryOpenDevice(name) ? new IntPtr(1) : IntPtr.Zero;
+            return IsDriverAvailable() ? new IntPtr(1) : IntPtr.Zero;
         }
 
         private static bool IsDriverAvailable()
         {
-            return IsServiceInstalled("npf") ||
-                   IsServiceInstalled("npcap") ||
-                   TryOpenDevice("npf") ||
-                   TryOpenDevice("NPF") ||
-                   TryOpenDevice("NPCAP") ||
-                   PcapNativeLibrary.TryFindWpcap(out _);
+            return IsNpcapInstalled() &&
+                   IsNpcapVersionSupported() &&
+                   PcapNativeLibrary.TryFindNpcapWpcap(out _);
+        }
+
+        private static bool IsNpcapInstalled()
+        {
+            return IsServiceInstalled("npcap") ||
+                   TryOpenDevice("npcap") ||
+                   TryOpenDevice("NPCAP");
+        }
+
+        private static bool IsNpcapVersionSupported()
+        {
+            return TryGetNpcapVersion(out var version) && version >= new Version(1, 87);
+        }
+
+        private static bool TryGetNpcapVersion(out Version version)
+        {
+            version = new Version(0, 0);
+
+            foreach (var registryPath in new[]
+            {
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            })
+            {
+                using var uninstallKey = Registry.LocalMachine.OpenSubKey(registryPath);
+                if (uninstallKey == null)
+                {
+                    continue;
+                }
+
+                foreach (var subKeyName in uninstallKey.GetSubKeyNames())
+                {
+                    using var appKey = uninstallKey.OpenSubKey(subKeyName);
+                    var displayName = appKey?.GetValue("DisplayName") as string;
+                    if (displayName == null || displayName.IndexOf("Npcap", StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        continue;
+                    }
+
+                    var displayVersion = appKey.GetValue("DisplayVersion") as string;
+                    if (TryParseVersion(displayVersion, out version))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryParseVersion(string versionText, out Version version)
+        {
+            version = new Version(0, 0);
+            if (string.IsNullOrWhiteSpace(versionText))
+            {
+                return false;
+            }
+
+            var builder = new StringBuilder();
+            foreach (var character in versionText)
+            {
+                if (char.IsDigit(character) || character == '.')
+                {
+                    builder.Append(character);
+                }
+                else if (builder.Length > 0)
+                {
+                    break;
+                }
+            }
+
+            return Version.TryParse(builder.ToString(), out version);
         }
 
         private static bool IsServiceInstalled(string name)
@@ -286,9 +354,9 @@ namespace PcapNet
             }
         }
 
-        public static bool TryFindWpcap(out string path)
+        public static bool TryFindNpcapWpcap(out string path)
         {
-            foreach (var candidate in GetWpcapCandidates())
+            foreach (var candidate in GetNpcapWpcapCandidates())
             {
                 if (File.Exists(candidate))
                 {
@@ -309,7 +377,7 @@ namespace PcapNet
                 return IntPtr.Zero;
             }
 
-            foreach (var candidate in GetWpcapCandidates())
+            foreach (var candidate in GetNpcapWpcapCandidates())
             {
                 if (File.Exists(candidate) && NativeLibrary.TryLoad(candidate, out var handle))
                 {
@@ -320,29 +388,21 @@ namespace PcapNet
             return IntPtr.Zero;
         }
 
-        private static string[] GetWpcapCandidates()
+        private static string[] GetNpcapWpcapCandidates()
         {
             var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            var baseDirectory = AppContext.BaseDirectory;
 
             return RuntimeInformation.ProcessArchitecture == Architecture.X86
                 ? new[]
                 {
-                    Path.Combine(baseDirectory, "wpcap.dll"),
                     Path.Combine(windows, "SysWOW64", "Npcap", "wpcap.dll"),
-                    Path.Combine(windows, "SysWOW64", "wpcap.dll"),
                     Path.Combine(windows, "System32", "Npcap", "wpcap.dll"),
-                    Path.Combine(windows, "System32", "wpcap.dll"),
                 }
                 : new[]
                 {
-                    Path.Combine(baseDirectory, "wpcap.dll"),
                     Path.Combine(windows, "System32", "Npcap", "wpcap.dll"),
-                    Path.Combine(windows, "System32", "wpcap.dll"),
                     Path.Combine(windows, "Sysnative", "Npcap", "wpcap.dll"),
-                    Path.Combine(windows, "Sysnative", "wpcap.dll"),
                     Path.Combine(windows, "SysWOW64", "Npcap", "wpcap.dll"),
-                    Path.Combine(windows, "SysWOW64", "wpcap.dll"),
                 };
         }
     }
